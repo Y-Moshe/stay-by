@@ -1,13 +1,15 @@
 const express = require('express')
 const { requireAuth } = require('../../middlewares/requireAuth.middleware')
 const { log } = require('../../middlewares/logger.middleware')
-const { getStays, getStayById, addStay, updateStay, removeStay, addStayMsg, removeStayMsg } = require('./stay.controller')
+const { getStays, getStayById, addStay, updateStay, removeStay, addStayMsg, removeStayMsg, getStayLocations } = require('./stay.controller')
 const router = express.Router()
 
 // middleware that is specific to this router
 // router.use(requireAuth)
 
 router.get('/', log, getStays)
+
+router.get('/locations', getStayLocations)
 
 router.get('/:id', getStayById)
 

@@ -2,6 +2,7 @@ const dbService = require('../../services/db.service')
 const logger = require('../../services/logger.service')
 const utilService = require('../../services/util.service')
 const ObjectId = require('mongodb').ObjectId
+const _ = require('lodash')
 
 async function query(filterBy = {}) {
     try {
@@ -10,6 +11,28 @@ async function query(filterBy = {}) {
         const stays = await collection.find(criteria).toArray()
 
         return stays.map(_mapStay)
+    } catch (err) {
+        logger.error('cannot find stays', err)
+        throw err
+    }
+}
+
+async function getStayLocations(querySearch) {
+    try {
+        const collection = await dbService.getCollection('stay')
+        const allStays = await collection.find({}).toArray()
+
+        let allLocs = allStays
+            .map(({ address }) => address)
+            .map(address => {
+                const formattedValue = `${address.city}, ${address.country}`
+                return formattedValue
+            })
+
+        const filteredLocs = _.uniq(allLocs)
+
+        const regex = new RegExp(querySearch, 'i')
+        return filteredLocs.filter(doc => regex.test(doc))
     } catch (err) {
         logger.error('cannot find stays', err)
         throw err
@@ -75,7 +98,7 @@ async function addStayMsg(stayId, msg) {
 async function removeStayMsg(stayId, msgId) {
     try {
         const collection = await dbService.getCollection('stay')
-        await collection.updateOne({ _id: ObjectId(stayId) }, { $pull: { msgs: {id: msgId} } })
+        await collection.updateOne({ _id: ObjectId(stayId) }, { $pull: { msgs: { id: msgId } } })
         return msgId
     } catch (err) {
         logger.error(`cannot add stay msg ${stayId}`, err)
@@ -103,5 +126,6 @@ module.exports = {
     add,
     update,
     addStayMsg,
-    removeStayMsg
+    removeStayMsg,
+    getStayLocations
 }
