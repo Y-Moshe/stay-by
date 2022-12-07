@@ -8,7 +8,22 @@ async function query(filterBy = {}) {
     try {
         const criteria = _buildCriteria(filterBy)
         const collection = await dbService.getCollection('stay')
-        const stays = await collection.find(criteria).toArray()
+        const stays = await collection.find(criteria).limit(100).toArray()
+
+        return stays.map(_mapStay)
+    } catch (err) {
+        logger.error('cannot find stays', err)
+        throw err
+    }
+}
+
+async function getLikedStays(likedStayIds) {
+    try {
+        const collection = await dbService.getCollection('stay')
+        likedStayIds = likedStayIds.map(id => ObjectId(id))
+        const stays = await collection.find({
+            _id: { $in: likedStayIds }
+        }).toArray()
 
         return stays.map(_mapStay)
     } catch (err) {
@@ -116,6 +131,20 @@ function _mapStay(stay) {
 
 function _buildCriteria(filterBy) {
     const criteria = {}
+
+    if (filterBy.label) {
+        const regex = new RegExp(filterBy.label, 'i')
+        criteria.labels = { $in: [regex] }
+    }
+
+    if (filterBy.city) {
+        criteria['address.city'] = { $regex: filterBy.city, $options: 'i' }
+    }
+
+    if (filterBy.country) {
+        criteria['address.country'] = { $regex: filterBy.country, $options: 'i' }
+    }
+
     return criteria
 }
 
@@ -127,5 +156,6 @@ module.exports = {
     update,
     addStayMsg,
     removeStayMsg,
-    getStayLocations
+    getStayLocations,
+    getLikedStays
 }

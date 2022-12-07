@@ -1,28 +1,30 @@
 const express = require('express')
 const { requireAuth } = require('../../middlewares/requireAuth.middleware')
 const { log } = require('../../middlewares/logger.middleware')
-const { getStays, getStayById, addStay, updateStay, removeStay, addStayMsg, removeStayMsg, getStayLocations } = require('./stay.controller')
+const controller = require('./stay.controller')
 const router = express.Router()
 
 // middleware that is specific to this router
 // router.use(requireAuth)
 
-router.get('/', log, getStays)
+router.get('/', log, controller.getStays)
 
-router.get('/locations', getStayLocations)
+router.get('/liked', requireAuth, controller.getLikedStays)
 
-router.get('/:id', getStayById)
+router.get('/locations', controller.getStayLocations)
 
-router.post('/', requireAuth, addStay)
+router.get('/:id', controller.getStayById)
 
-router.put('/:id', requireAuth, updateStay)
+router.post('/', requireAuth, controller.addStay)
 
-router.delete('/:id', requireAuth, removeStay)
+router.put('/:id', requireAuth, controller.updateStay)
+
+router.delete('/:id', requireAuth, controller.removeStay)
 
 // router.delete('/:id', requireAuth, requireAdmin, removeStay)
 
-router.post('/:id/msg', requireAuth, addStayMsg)
+router.post('/:id/msg', requireAuth, controller.addStayMsg)
 
-router.delete('/:id/msg/:msgId', requireAuth, removeStayMsg)
+router.delete('/:id/msg/:msgId', requireAuth, controller.removeStayMsg)
 
 module.exports = router
