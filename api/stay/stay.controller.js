@@ -5,10 +5,20 @@ const logger = require('../../services/logger.service')
 async function getStays(req, res) {
   try {
     logger.debug('Getting Stays')
-    const filterBy = {
-      txt: req.query.txt || ''
-    }
+    const filterBy = {}
     const stays = await stayService.query(filterBy)
+    res.json(stays.slice(0, 80))
+  } catch (err) {
+    logger.error('Failed to get stays', err)
+    res.status(500).send({ err: 'Failed to get stays' })
+  }
+}
+
+async function getStayLocations(req, res) {
+  try {
+    logger.debug('Getting Locations')
+    const stays = await stayService.getStayLocations(req.query.q)
+
     res.json(stays)
   } catch (err) {
     logger.error('Failed to get stays', err)
@@ -67,7 +77,7 @@ async function removeStay(req, res) {
 }
 
 async function addStayMsg(req, res) {
-  const {loggedinUser} = req
+  const { loggedinUser } = req
   try {
     const stayId = req.params.id
     const msg = {
@@ -84,10 +94,10 @@ async function addStayMsg(req, res) {
 }
 
 async function removeStayMsg(req, res) {
-  const {loggedinUser} = req
+  const { loggedinUser } = req
   try {
     const stayId = req.params.id
-    const {msgId} = req.params
+    const { msgId } = req.params
 
     const removedId = await stayService.removeStayMsg(stayId, msgId)
     res.send(removedId)
@@ -105,5 +115,6 @@ module.exports = {
   updateStay,
   removeStay,
   addStayMsg,
-  removeStayMsg
+  removeStayMsg,
+  getStayLocations
 }
