@@ -40,11 +40,6 @@ async function addReview(req, res) {
         
         // prepare the updated review for sending out
         review.aboutUser = await userService.getById(review.aboutUserId)
-        
-        // Give the user credit for adding a review
-        // var user = await userService.getById(review.byUserId)
-        // user.score += 10
-        loggedinUser.score += 10
 
         loggedinUser = await userService.update(loggedinUser)
         review.byUser = loggedinUser
