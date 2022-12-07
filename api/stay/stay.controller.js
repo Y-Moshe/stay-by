@@ -1,4 +1,5 @@
 const stayService = require('./stay.service.js')
+const userService = require('../user/user.service')
 
 const logger = require('../../services/logger.service')
 
@@ -30,8 +31,8 @@ async function getLikedStays(req, res) {
   try {
     logger.debug('Getting liked stays')
     const { loggedinUser } = req
-    console.log('loggedinUser', loggedinUser)
-    const stays = await stayService.getLikedStays(loggedinUser.likedStays)
+    const { likedStays } = await userService.getById(loggedinUser._id)
+    const stays = await stayService.getLikedStays(likedStays)
 
     res.json(stays)
   } catch (err) {
