@@ -1,4 +1,4 @@
-const orderService = require('./order.service.js.js.js')
+const orderService = require('./order.service.js')
 
 const logger = require('../../services/logger.service')
 
