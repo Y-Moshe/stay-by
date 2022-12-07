@@ -3,14 +3,12 @@ const logger = require('../../services/logger.service')
 const utilService = require('../../services/util.service')
 const ObjectId = require('mongodb').ObjectId
 
-async function query(filterBy={txt:''}) {
+async function query(filterBy = {}) {
     try {
-        const criteria = {
-            vendor: { $regex: filterBy.txt, $options: 'i' }
-        }
+        const criteria = _buildCriteria(filterBy)
         const collection = await dbService.getCollection('order')
-        var orders = await collection.find(criteria).toArray()
-        return orders
+        const orders = await collection.find(criteria).toArray()
+        return orders.map(_mapOrder)
     } catch (err) {
         logger.error('cannot find orders', err)
         throw err
@@ -20,8 +18,8 @@ async function query(filterBy={txt:''}) {
 async function getById(orderId) {
     try {
         const collection = await dbService.getCollection('order')
-        const order = collection.findOne({ _id: ObjectId(orderId) })
-        return order
+        const order = await collection.findOne({ _id: ObjectId(orderId) })
+        return _mapOrder(order)
     } catch (err) {
         logger.error(`while finding order ${orderId}`, err)
         throw err
@@ -50,14 +48,10 @@ async function add(order) {
     }
 }
 
-async function update(order) {
+async function update(orderId, order) {
     try {
-        const orderToSave = {
-            vendor: order.vendor,
-            price: order.price
-        }
         const collection = await dbService.getCollection('order')
-        await collection.updateOne({ _id: ObjectId(order._id) }, { $set: orderToSave })
+        await collection.updateOne({ _id: ObjectId(orderId) }, { $set: order })
         return order
     } catch (err) {
         logger.error(`cannot update order ${orderId}`, err)
@@ -87,6 +81,19 @@ async function removeOrderMsg(orderId, msgId) {
         throw err
     }
 }
+
+function _mapOrder(order) {
+    if (!order) return {}
+    return {
+        ...order,
+        createdAt: ObjectId(order._id).getTimestamp()
+    }
+  }
+  
+  function _buildCriteria(filterBy) {
+    const criteria = {}
+    return criteria
+  }
 
 module.exports = {
     remove,

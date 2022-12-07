@@ -5,10 +5,7 @@ const logger = require('../../services/logger.service')
 async function getOrders(req, res) {
   try {
     logger.debug('Getting Orders')
-    const filterBy = {
-      txt: req.query.txt || ''
-    }
-    const orders = await orderService.query(filterBy)
+    const orders = await orderService.query()
     res.json(orders)
   } catch (err) {
     logger.error('Failed to get orders', err)
@@ -28,11 +25,11 @@ async function getOrderById(req, res) {
 }
 
 async function addOrder(req, res) {
-  const {loggedinUser} = req
+  const { loggedinUser } = req
 
   try {
     const order = req.body
-    order.owner = loggedinUser
+    order.renter = loggedinUser
     const addedOrder = await orderService.add(order)
     res.json(addedOrder)
   } catch (err) {
@@ -44,8 +41,9 @@ async function addOrder(req, res) {
 
 async function updateOrder(req, res) {
   try {
+    const { id: orderId } = req.params
     const order = req.body
-    const updatedOrder = await orderService.update(order)
+    const updatedOrder = await orderService.update(orderId, order)
     res.json(updatedOrder)
   } catch (err) {
     logger.error('Failed to update order', err)
@@ -66,7 +64,7 @@ async function removeOrder(req, res) {
 }
 
 async function addOrderMsg(req, res) {
-  const {loggedinUser} = req
+  const { loggedinUser } = req
   try {
     const orderId = req.params.id
     const msg = {
@@ -83,10 +81,10 @@ async function addOrderMsg(req, res) {
 }
 
 async function removeOrderMsg(req, res) {
-  const {loggedinUser} = req
+  const { loggedinUser } = req
   try {
     const orderId = req.params.id
-    const {msgId} = req.params
+    const { msgId } = req.params
 
     const removedId = await orderService.removeOrderMsg(orderId, msgId)
     res.send(removedId)
