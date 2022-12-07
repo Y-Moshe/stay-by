@@ -3,14 +3,12 @@ const logger = require('../../services/logger.service')
 const utilService = require('../../services/util.service')
 const ObjectId = require('mongodb').ObjectId
 
-async function query(filterBy={txt:''}) {
+async function query(filterBy = {}) {
     try {
-        const criteria = {
-            vendor: { $regex: filterBy.txt, $options: 'i' }
-        }
+        const criteria = _buildCriteria(filterBy)
         const collection = await dbService.getCollection('stay')
         var stays = await collection.find(criteria).toArray()
-        return stays
+        return stays.map(stay => _mapStay(stay))
     } catch (err) {
         logger.error('cannot find stays', err)
         throw err
@@ -21,7 +19,7 @@ async function getById(stayId) {
     try {
         const collection = await dbService.getCollection('stay')
         const stay = collection.findOne({ _id: ObjectId(stayId) })
-        return stay
+        return _mapStay(stay)
     } catch (err) {
         logger.error(`while finding stay ${stayId}`, err)
         throw err
@@ -43,7 +41,7 @@ async function add(stay) {
     try {
         const collection = await dbService.getCollection('stay')
         await collection.insertOne(stay)
-        return stay
+        return _mapStay(stay)
     } catch (err) {
         logger.error('cannot insert stay', err)
         throw err
@@ -86,6 +84,18 @@ async function removeStayMsg(stayId, msgId) {
         logger.error(`cannot add stay msg ${stayId}`, err)
         throw err
     }
+}
+
+function _mapStay(stay) {
+    return {
+        ...stay,
+        createdAt: ObjectId(stay._id).getTimestamp()
+    }
+}
+
+function _buildCriteria(filterBy) {
+    const criteria = {}
+    return criteria
 }
 
 module.exports = {
