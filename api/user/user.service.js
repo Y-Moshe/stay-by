@@ -17,15 +17,9 @@ async function query(filterBy = {}) {
     const criteria = _buildCriteria(filterBy)
     try {
         const collection = await dbService.getCollection('user')
-        var users = await collection.find(criteria).toArray()
-        users = users.map(user => {
-            delete user.password
-            user.createdAt = ObjectId(user._id).getTimestamp()
-            // Returning fake fresh data
-            // user.createdAt = Date.now() - (1000 * 60 * 60 * 24 * 3) // 3 days ago
-            return user
-        })
-        return users
+        const users = await collection.find(criteria).toArray()
+
+        return users.map(_mapUser)
     } catch (err) {
         logger.error('cannot find users', err)
         throw err
@@ -37,7 +31,6 @@ async function getById(userId) {
     try {
         const collection = await dbService.getCollection('user')
         const user = await collection.findOne({ _id: ObjectId(userId) })
-        delete user.password
 
         // user.givenReviews = await reviewService.query({ byUserId: ObjectId(user._id) })
         // user.givenReviews = user.givenReviews.map(review => {
@@ -45,7 +38,7 @@ async function getById(userId) {
         //     return review
         // })
 
-        return user
+        return _mapUser(user)
     } catch (err) {
         logger.error(`while finding user by id: ${userId}`, err)
         throw err
@@ -76,6 +69,7 @@ async function update(user) {
     try {
         // peek only updatable properties
         const userToSave = {
+            ...user,
             _id: ObjectId(user._id), // needed for the returnd obj
             fullname: user.fullname
         }
@@ -103,6 +97,15 @@ async function add(user) {
     } catch (err) {
         logger.error('cannot insert user', err)
         throw err
+    }
+}
+
+function _mapUser(user) {
+    if (!user) return {}
+    delete user.password
+    return {
+        ...user,
+        createdAt: ObjectId(user._id).getTimestamp()
     }
 }
 
