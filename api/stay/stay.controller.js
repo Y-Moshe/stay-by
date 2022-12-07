@@ -28,11 +28,11 @@ async function getStayById(req, res) {
 }
 
 async function addStay(req, res) {
-  const {loggedinUser} = req
+  const { loggedinUser } = req
 
   try {
     const stay = req.body
-    stay.owner = loggedinUser
+    stay.host = loggedinUser
     const addedStay = await stayService.add(stay)
     res.json(addedStay)
   } catch (err) {
@@ -44,8 +44,9 @@ async function addStay(req, res) {
 
 async function updateStay(req, res) {
   try {
+    const { id: stayId } = req.params
     const stay = req.body
-    const updatedStay = await stayService.update(stay)
+    const updatedStay = await stayService.update(stayId, stay)
     res.json(updatedStay)
   } catch (err) {
     logger.error('Failed to update stay', err)

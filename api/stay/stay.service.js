@@ -7,8 +7,9 @@ async function query(filterBy = {}) {
     try {
         const criteria = _buildCriteria(filterBy)
         const collection = await dbService.getCollection('stay')
-        var stays = await collection.find(criteria).toArray()
-        return stays.map(stay => _mapStay(stay))
+        const stays = await collection.find(criteria).toArray()
+
+        return stays.map(_mapStay)
     } catch (err) {
         logger.error('cannot find stays', err)
         throw err
@@ -18,7 +19,7 @@ async function query(filterBy = {}) {
 async function getById(stayId) {
     try {
         const collection = await dbService.getCollection('stay')
-        const stay = collection.findOne({ _id: ObjectId(stayId) })
+        const stay = await collection.findOne({ _id: ObjectId(stayId) })
         return _mapStay(stay)
     } catch (err) {
         logger.error(`while finding stay ${stayId}`, err)
@@ -41,21 +42,17 @@ async function add(stay) {
     try {
         const collection = await dbService.getCollection('stay')
         await collection.insertOne(stay)
-        return _mapStay(stay)
+        return stay
     } catch (err) {
         logger.error('cannot insert stay', err)
         throw err
     }
 }
 
-async function update(stay) {
+async function update(stayId, stay) {
     try {
-        const stayToSave = {
-            vendor: stay.vendor,
-            price: stay.price
-        }
         const collection = await dbService.getCollection('stay')
-        await collection.updateOne({ _id: ObjectId(stay._id) }, { $set: stayToSave })
+        await collection.updateOne({ _id: ObjectId(stayId) }, { $set: stay })
         return stay
     } catch (err) {
         logger.error(`cannot update stay ${stayId}`, err)
@@ -87,6 +84,7 @@ async function removeStayMsg(stayId, msgId) {
 }
 
 function _mapStay(stay) {
+    if (!stay) return {}
     return {
         ...stay,
         createdAt: ObjectId(stay._id).getTimestamp()
