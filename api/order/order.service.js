@@ -66,6 +66,8 @@ async function remove(orderId) {
 async function add(order) {
     try {
         const collection = await dbService.getCollection('order')
+        // Added for demo purposes
+        order.createdAt = Date.now()
         await collection.insertOne(order)
         return _mapOrder(order)
     } catch (err) {
@@ -113,7 +115,7 @@ function _mapOrder(order) {
     if (!order) return {}
     return {
         ...order,
-        createdAt: ObjectId(order._id).getTimestamp()
+        // createdAt: ObjectId(order._id).getTimestamp()
     }
   }
   
