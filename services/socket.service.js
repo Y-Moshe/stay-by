@@ -3,6 +3,9 @@ const logger = require('./logger.service')
 const SOCKET_EVENT_ORDER_ADD = 'order-add'
 const SOCKET_EMIT_ORDER_ADD = 'order-added'
 
+const SOCKET_EVENT_ORDER_STATUS = 'order-status'
+const SOCKET_EMIT_ORDER_STATUS = 'order-status-changed'
+
 var gIo = null
 
 function setupSocketAPI(http) {
@@ -46,16 +49,22 @@ function setupSocketAPI(http) {
             delete socket.userId
         })
 
-
         socket.on(SOCKET_EVENT_ORDER_ADD, async order => {
-            const hostSocket =  await _getUserSocket(order.host._id)
-            if (hostSocket) {
-                emitToUser({
-                    type: SOCKET_EMIT_ORDER_ADD,
-                    data: order,
-                    userId: order.host._id
-                })
-            }
+            emitToUser({
+                type: SOCKET_EMIT_ORDER_ADD,
+                data: order,
+                userId: order.host._id
+            })
+        })
+
+        socket.on(SOCKET_EVENT_ORDER_STATUS, async order => {
+            const renterId = order.renter._id
+            const allSockets = await _getAllSockets()
+
+            const allUserSockets = allSockets.filter(({ userId }) => userId === renterId)
+            allUserSockets.forEach(socket => {
+                socket.emit(SOCKET_EMIT_ORDER_STATUS, order)
+            })
         })
     })
 }
