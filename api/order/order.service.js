@@ -15,6 +15,19 @@ async function query(filterBy = {}) {
     }
 }
 
+async function getUserOrders(userId) {
+    try {
+        const collection = await dbService.getCollection('order')
+        const orders = await collection.find({
+            'renter._id': userId
+        }).toArray()
+        return orders.map(_mapOrder)
+    } catch (err) {
+        logger.error('cannot find orders', err)
+        throw err
+    }
+}
+
 async function getById(orderId) {
     try {
         const collection = await dbService.getCollection('order')
@@ -51,6 +64,7 @@ async function add(order) {
 async function update(orderId, order) {
     try {
         const collection = await dbService.getCollection('order')
+        delete order._id
         await collection.updateOne({ _id: ObjectId(orderId) }, { $set: order })
         return order
     } catch (err) {
@@ -102,5 +116,6 @@ module.exports = {
     add,
     update,
     addOrderMsg,
-    removeOrderMsg
+    removeOrderMsg,
+    getUserOrders
 }

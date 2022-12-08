@@ -13,6 +13,18 @@ async function getOrders(req, res) {
   }
 }
 
+async function getUserOrders(req, res) {
+  try {
+    logger.debug('Getting user orders')
+    const { loggedinUser } = req
+    const orders = await orderService.getUserOrders(loggedinUser._id)
+    res.json(orders)
+  } catch (err) {
+    logger.error('Failed to get orders', err)
+    res.status(500).send({ err: 'Failed to get orders' })
+  }
+}
+
 async function getOrderById(req, res) {
   try {
     const orderId = req.params.id
@@ -102,5 +114,6 @@ module.exports = {
   updateOrder,
   removeOrder,
   addOrderMsg,
-  removeOrderMsg
+  removeOrderMsg,
+  getUserOrders
 }
