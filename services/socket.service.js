@@ -1,5 +1,8 @@
 const logger = require('./logger.service')
 
+const SOCKET_EVENT_ORDER_ADD = 'order-add'
+const SOCKET_EMIT_ORDER_ADD = 'order-added'
+
 var gIo = null
 
 function setupSocketAPI(http) {
@@ -43,6 +46,17 @@ function setupSocketAPI(http) {
             delete socket.userId
         })
 
+
+        socket.on(SOCKET_EVENT_ORDER_ADD, async order => {
+            const hostSocket =  await _getUserSocket(order.host._id)
+            if (hostSocket) {
+                emitToUser({
+                    type: SOCKET_EMIT_ORDER_ADD,
+                    data: order,
+                    userId: order.host._id
+                })
+            }
+        })
     })
 }
 
