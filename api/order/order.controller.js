@@ -13,11 +13,23 @@ async function getOrders(req, res) {
   }
 }
 
-async function getUserOrders(req, res) {
+async function getRenterOrders(req, res) {
   try {
-    logger.debug('Getting user orders')
+    logger.debug('Getting renter orders')
     const { loggedinUser } = req
-    const orders = await orderService.getUserOrders(loggedinUser._id)
+    const orders = await orderService.getRenterOrders(loggedinUser._id)
+    res.json(orders)
+  } catch (err) {
+    logger.error('Failed to get orders', err)
+    res.status(500).send({ err: 'Failed to get orders' })
+  }
+}
+
+async function getHostOrders(req, res) {
+  try {
+    logger.debug('Getting host orders')
+    const { loggedinUser } = req
+    const orders = await orderService.getHostOrders(loggedinUser._id)
     res.json(orders)
   } catch (err) {
     logger.error('Failed to get orders', err)
@@ -115,5 +127,6 @@ module.exports = {
   removeOrder,
   addOrderMsg,
   removeOrderMsg,
-  getUserOrders
+  getRenterOrders,
+  getHostOrders
 }

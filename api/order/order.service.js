@@ -15,11 +15,24 @@ async function query(filterBy = {}) {
     }
 }
 
-async function getUserOrders(userId) {
+async function getRenterOrders(loggedInUserId) {
     try {
         const collection = await dbService.getCollection('order')
         const orders = await collection.find({
-            'renter._id': userId
+            'renter._id': loggedInUserId
+        }).toArray()
+        return orders.map(_mapOrder)
+    } catch (err) {
+        logger.error('cannot find orders', err)
+        throw err
+    }
+}
+
+async function getHostOrders(loggedInUserId) {
+    try {
+        const collection = await dbService.getCollection('order')
+        const orders = await collection.find({
+            'host._id': loggedInUserId
         }).toArray()
         return orders.map(_mapOrder)
     } catch (err) {
@@ -117,5 +130,6 @@ module.exports = {
     update,
     addOrderMsg,
     removeOrderMsg,
-    getUserOrders
+    getRenterOrders,
+    getHostOrders
 }

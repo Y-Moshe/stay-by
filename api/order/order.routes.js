@@ -9,7 +9,9 @@ const router = express.Router()
 
 router.get('/', log, controller.getOrders)
 
-router.get('/user', requireAuth, controller.getUserOrders)
+router.get('/renter', requireAuth, controller.getRenterOrders)
+
+router.get('/host', requireAuth, controller.getHostOrders)
 
 router.get('/:id', controller.getOrderById)
 
