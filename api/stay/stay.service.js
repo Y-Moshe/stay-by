@@ -104,6 +104,7 @@ async function add(stay) {
 async function update(stayId, stay) {
     try {
         const collection = await dbService.getCollection('stay')
+        delete stay._id
         await collection.updateOne({ _id: ObjectId(stayId) }, { $set: stay })
         return stay
     } catch (err) {
