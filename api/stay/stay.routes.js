@@ -13,6 +13,8 @@ router.get('/liked', requireAuth, controller.getLikedStays)
 
 router.get('/locations', controller.getStayLocations)
 
+router.get('/listings', requireAuth, controller.getListings)
+
 router.get('/:id', controller.getStayById)
 
 router.post('/', requireAuth, controller.addStay)

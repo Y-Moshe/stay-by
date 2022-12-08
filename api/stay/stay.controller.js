@@ -41,6 +41,19 @@ async function getLikedStays(req, res) {
   }
 }
 
+async function getListings(req, res) {
+  try {
+    logger.debug('Getting listings')
+    const { loggedinUser } = req
+    const stays = await stayService.getListings(loggedinUser._id)
+
+    res.json(stays)
+  } catch (err) {
+    logger.error('Failed to get stays', err)
+    res.status(500).send({ err: 'Failed to get stays' })
+  }
+}
+
 async function getStayById(req, res) {
   try {
     const stayId = req.params.id
@@ -132,5 +145,6 @@ module.exports = {
   addStayMsg,
   removeStayMsg,
   getStayLocations,
-  getLikedStays
+  getLikedStays,
+  getListings
 }

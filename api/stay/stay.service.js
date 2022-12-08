@@ -32,6 +32,20 @@ async function getLikedStays(likedStayIds) {
     }
 }
 
+async function getListings(hostId) {
+    try {
+        const collection = await dbService.getCollection('stay')
+        const stays = await collection.find({
+            'host._id': hostId
+        }).toArray()
+
+        return stays.map(_mapStay)
+    } catch (err) {
+        logger.error('cannot find stays', err)
+        throw err
+    }
+}
+
 async function getStayLocations(querySearch) {
     try {
         const collection = await dbService.getCollection('stay')
@@ -157,5 +171,6 @@ module.exports = {
     addStayMsg,
     removeStayMsg,
     getStayLocations,
-    getLikedStays
+    getLikedStays,
+    getListings
 }
