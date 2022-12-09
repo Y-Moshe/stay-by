@@ -8,7 +8,11 @@ async function query(filterBy = {}) {
     try {
         const criteria = _buildCriteria(filterBy)
         const collection = await dbService.getCollection('stay')
-        const stays = await collection.find(criteria).limit(100).toArray()
+        const stays = await collection
+            .find(criteria)
+            .skip(+filterBy.skip || 0)
+            .limit(40)
+            .toArray()
 
         return stays.map(_mapStay)
     } catch (err) {
