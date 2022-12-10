@@ -10,8 +10,8 @@ async function query(filterBy = {}) {
         const collection = await dbService.getCollection('stay')
         const stays = await collection
             .find(criteria)
-            .skip(+filterBy.skip || 0)
-            .limit(40)
+            // .skip(+filterBy.skip || 0)
+            .limit(100)
             .toArray()
 
         return stays.map(_mapStay)
