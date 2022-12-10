@@ -116,7 +116,7 @@ function _mapOrder(order) {
     if (!order) return {}
     return {
         ...order,
-        status: Date.now() > +order.endDate ? 'past' : order.status
+        status: Date.now() > +order.endDate ? 'completed' : order.status
         // createdAt: ObjectId(order._id).getTimestamp()
     }
   }
