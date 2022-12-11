@@ -18,10 +18,14 @@ async function query(filterBy = {}) {
 async function getRenterOrders(loggedInUserId) {
     try {
         const collection = await dbService.getCollection('order')
-        const orders = await collection.find({
-            'renter._id': loggedInUserId
-        }).toArray()
-        return orders.map(_mapOrder)
+        const orders = await collection
+            .find({
+                'renter._id': loggedInUserId,
+            })
+            .toArray()
+        return orders
+            .map(_mapOrder)
+            .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))
     } catch (err) {
         logger.error('cannot find orders', err)
         throw err
@@ -31,10 +35,14 @@ async function getRenterOrders(loggedInUserId) {
 async function getHostOrders(loggedInUserId) {
     try {
         const collection = await dbService.getCollection('order')
-        const orders = await collection.find({
-            'host._id': loggedInUserId
-        }).toArray()
-        return orders.map(_mapOrder)
+        const orders = await collection
+            .find({
+                'host._id': loggedInUserId,
+            })
+            .toArray()
+        return orders
+            .map(_mapOrder)
+            .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))
     } catch (err) {
         logger.error('cannot find orders', err)
         throw err
@@ -93,7 +101,10 @@ async function addOrderMsg(orderId, msg) {
     try {
         msg.id = utilService.makeId()
         const collection = await dbService.getCollection('order')
-        await collection.updateOne({ _id: ObjectId(orderId) }, { $push: { msgs: msg } })
+        await collection.updateOne(
+            { _id: ObjectId(orderId) },
+            { $push: { msgs: msg } }
+        )
         return msg
     } catch (err) {
         logger.error(`cannot add order msg ${orderId}`, err)
@@ -104,7 +115,10 @@ async function addOrderMsg(orderId, msg) {
 async function removeOrderMsg(orderId, msgId) {
     try {
         const collection = await dbService.getCollection('order')
-        await collection.updateOne({ _id: ObjectId(orderId) }, { $pull: { msgs: {id: msgId} } })
+        await collection.updateOne(
+            { _id: ObjectId(orderId) },
+            { $pull: { msgs: { id: msgId } } }
+        )
         return msgId
     } catch (err) {
         logger.error(`cannot add order msg ${orderId}`, err)
@@ -116,15 +130,15 @@ function _mapOrder(order) {
     if (!order) return {}
     return {
         ...order,
-        status: Date.now() > +order.endDate ? 'completed' : order.status
+        status: Date.now() > +order.endDate ? 'completed' : order.status,
         // createdAt: ObjectId(order._id).getTimestamp()
     }
-  }
-  
-  function _buildCriteria(filterBy) {
+}
+
+function _buildCriteria(filterBy) {
     const criteria = {}
     return criteria
-  }
+}
 
 module.exports = {
     remove,
@@ -135,5 +149,5 @@ module.exports = {
     addOrderMsg,
     removeOrderMsg,
     getRenterOrders,
-    getHostOrders
+    getHostOrders,
 }
