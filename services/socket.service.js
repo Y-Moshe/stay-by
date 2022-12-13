@@ -6,6 +6,9 @@ const SOCKET_EMIT_ORDER_ADD = 'order-added'
 const SOCKET_EVENT_ORDER_STATUS = 'order-status'
 const SOCKET_EMIT_ORDER_STATUS = 'order-status-changed'
 
+const SOCKET_EVENT_USER_UPDATE = 'user-update'
+const SOCKET_EMIT_USER_UPDATED = 'user-updated'
+
 var gIo = null
 
 function setupSocketAPI(http) {
@@ -43,6 +46,7 @@ function setupSocketAPI(http) {
         socket.on('set-user-socket', userId => {
             logger.info(`Setting socket.userId = ${userId} for socket [id: ${socket.id}]`)
             socket.userId = userId
+            socket.join(userId)
         })
         socket.on('unset-user-socket', () => {
             logger.info(`Removing socket.userId for socket [id: ${socket.id}]`)
@@ -59,12 +63,19 @@ function setupSocketAPI(http) {
 
         socket.on(SOCKET_EVENT_ORDER_STATUS, async order => {
             const renterId = order.renter._id
-            const allSockets = await _getAllSockets()
 
-            const allUserSockets = allSockets.filter(({ userId }) => userId === renterId)
-            allUserSockets.forEach(socket => {
-                socket.emit(SOCKET_EMIT_ORDER_STATUS, order)
-            })
+            gIo.to(renterId).emit(SOCKET_EMIT_ORDER_STATUS, order)
+            // const allSockets = await _getAllSockets()
+
+            // allSockets
+            //     .filter(({ userId }) => userId === renterId)
+            //     .forEach(socket => {
+            //         socket.emit(SOCKET_EMIT_ORDER_STATUS, order)
+            //     })
+        })
+
+        socket.on(SOCKET_EVENT_USER_UPDATE, async user => {
+            gIo.to(user._id).emit(SOCKET_EMIT_USER_UPDATED, user)
         })
     })
 }
