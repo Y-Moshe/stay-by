@@ -1,13 +1,21 @@
 const logger = require('./logger.service')
 
-const SOCKET_EVENT_ORDER_ADD = 'order-add'
-const SOCKET_EMIT_ORDER_ADD = 'order-added'
+const EVENTS = {
+    ORDER_ADD: 'order-add',
+    ORDER_STATUS: 'order-status',
+    USER_UPDATE: 'user-update',
+    CHAT_SET_TOPIC: 'chat-set-topic',
+    CHAT_SEND_MSG: 'chat-send-msg',
+    SET_USER_SOCKET: 'set-user-socket',
+    UNSET_USER_SOCKET: 'unset-user-socket'
+}
 
-const SOCKET_EVENT_ORDER_STATUS = 'order-status'
-const SOCKET_EMIT_ORDER_STATUS = 'order-status-changed'
-
-const SOCKET_EVENT_USER_UPDATE = 'user-update'
-const SOCKET_EMIT_USER_UPDATED = 'user-updated'
+const EMITS = {
+    ORDER_ADDED: 'order-added',
+    ORDER_STATUS_CHANGED: 'order-status-changed',
+    USER_UPDATED: 'user-updated',
+    CHAT_ADD_MSG: 'chat-add-msg'
+}
 
 var gIo = null
 
@@ -17,12 +25,15 @@ function setupSocketAPI(http) {
             origin: '*',
         }
     })
+
     gIo.on('connection', socket => {
         logger.info(`New connected socket [id: ${socket.id}]`)
         socket.on('disconnect', socket => {
             logger.info(`Socket disconnected [id: ${socket.id}]`)
         })
-        socket.on('chat-set-topic', topic => {
+
+        // Join user to some room / topic (chat for example)
+        socket.on(EVENTS.CHAT_SET_TOPIC, topic => {
             if (socket.myTopic === topic) return
             if (socket.myTopic) {
                 socket.leave(socket.myTopic)
@@ -31,51 +42,42 @@ function setupSocketAPI(http) {
             socket.join(topic)
             socket.myTopic = topic
         })
-        socket.on('chat-send-msg', msg => {
+
+        // When new message sent, emits to all sockets in the same room / topic
+        socket.on(EVENTS.CHAT_SEND_MSG, msg => {
             logger.info(`New chat msg from socket [id: ${socket.id}], emitting to topic ${socket.myTopic}`)
-            // emits to all sockets:
-            // gIo.emit('chat addMsg', msg)
-            // emits only to sockets in the same room
-            gIo.to(socket.myTopic).emit('chat-add-msg', msg)
+            gIo.to(socket.myTopic).emit(EMITS.CHAT_ADD_MSG, msg)
         })
-        socket.on('user-watch', userId => {
-            logger.info(`user-watch from socket [id: ${socket.id}], on user ${userId}`)
-            socket.join('watching:' + userId)
-            
-        })
-        socket.on('set-user-socket', userId => {
+
+        // On first login
+        socket.on(EVENTS.SET_USER_SOCKET, userId => {
             logger.info(`Setting socket.userId = ${userId} for socket [id: ${socket.id}]`)
             socket.userId = userId
             socket.join(userId)
         })
-        socket.on('unset-user-socket', () => {
+
+        // On logout
+        socket.on(EVENTS.UNSET_USER_SOCKET, () => {
             logger.info(`Removing socket.userId for socket [id: ${socket.id}]`)
             delete socket.userId
         })
 
-        socket.on(SOCKET_EVENT_ORDER_ADD, async order => {
-            emitToUser({
-                type: SOCKET_EMIT_ORDER_ADD,
-                data: order,
-                userId: order.host._id
-            })
+        // When new order is sent, notify the host (if connected / his socket(s) exists)
+        socket.on(EVENTS.ORDER_ADD, order => {
+            const hostId = order.host._id
+            gIo.to(hostId).emit(EMITS.ORDER_ADDED, order)
         })
 
-        socket.on(SOCKET_EVENT_ORDER_STATUS, async order => {
+        // When the status of an order is changed, notify the renter (if connected / his socket(s) exists)
+        socket.on(EVENTS.ORDER_STATUS, order => {
             const renterId = order.renter._id
-
-            gIo.to(renterId).emit(SOCKET_EMIT_ORDER_STATUS, order)
-            // const allSockets = await _getAllSockets()
-
-            // allSockets
-            //     .filter(({ userId }) => userId === renterId)
-            //     .forEach(socket => {
-            //         socket.emit(SOCKET_EMIT_ORDER_STATUS, order)
-            //     })
+            gIo.to(renterId).emit(EMITS.ORDER_STATUS_CHANGED, order)
         })
 
-        socket.on(SOCKET_EVENT_USER_UPDATE, async user => {
-            gIo.to(user._id).emit(SOCKET_EMIT_USER_UPDATED, user)
+        // When the user update some of his data, notify all his connected socket(s) for live updates
+        // (specifically used for wishlist updates)
+        socket.on(EVENTS.USER_UPDATE, user => {
+            gIo.to(user._id).emit(EMITS.USER_UPDATED, user)
         })
     })
 }
@@ -92,9 +94,8 @@ async function emitToUser({ type, data, userId }) {
     if (socket) {
         logger.info(`Emiting event: ${type} to user: ${userId} socket [id: ${socket.id}]`)
         socket.emit(type, data)
-    }else {
+    } else {
         logger.info(`No active socket for user: ${userId}`)
-        // _printSockets()
     }
 }
 
@@ -102,7 +103,7 @@ async function emitToUser({ type, data, userId }) {
 // Optionally, broadcast to a room / to all
 async function broadcast({ type, data, room = null, userId }) {
     userId = userId.toString()
-    
+
     logger.info(`Broadcasting event: ${type}`)
     const excludedSocket = await _getUserSocket(userId)
     if (room && excludedSocket) {
@@ -131,23 +132,14 @@ async function _getAllSockets() {
     return sockets
 }
 
-async function _printSockets() {
-    const sockets = await _getAllSockets()
-    console.log(`Sockets: (count: ${sockets.length}):`)
-    sockets.forEach(_printSocket)
-}
-function _printSocket(socket) {
-    console.log(`Socket - socketId: ${socket.id} userId: ${socket.userId}`)
-}
-
 module.exports = {
     // set up the sockets service and define the API
     setupSocketAPI,
     // emit to everyone / everyone in a specific room (label)
-    emitTo, 
+    emitTo,
     // emit to a specific user (if currently active in system)
-    emitToUser, 
+    emitToUser,
     // Send to all sockets BUT not the current socket - if found
     // (otherwise broadcast to a room / to all)
-    broadcast,
+    broadcast
 }
