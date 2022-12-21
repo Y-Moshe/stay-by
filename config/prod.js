@@ -1,4 +1,6 @@
+const { DB_NAME, DB_USER_NAME, DB_USER_PASSWORD } = process.env
+
 module.exports = {
-  dbURL: 'mongodb+srv://dbUser:Jr8IBS4ZEglyoapW@cluster0.xytksdp.mongodb.net/?retryWrites=true&w=majority',
-  dbName: 'stayby_db'
+  dbURL: `mongodb+srv://${DB_USER_NAME}:${DB_USER_PASSWORD}@cluster0.xytksdp.mongodb.net/?retryWrites=true&w=majority`,
+  dbName: DB_NAME
 }

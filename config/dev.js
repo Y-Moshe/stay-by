@@ -1,4 +1,4 @@
 module.exports = {
   dbURL: 'mongodb://127.0.0.1:27017',
-  dbName : 'stayby_db'
+  dbName: process.env.DB_NAME
 }
