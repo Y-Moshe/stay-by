@@ -1,20 +1,21 @@
 {
-    "name": "server",
-    "version": "1.0.0",
-    "description": "production ready server",
+    "name": "stay-by",
+    "version": "1.1.0",
+    "description": "",
     "main": "server.js",
     "scripts": {
         "start": "nodemon server.js",
         "server:dev": "nodemon server.js",
-        "server:prod": "set NODE_ENV=production&&node server.js"
+        "server:prod": "set NODE_ENV=production && node server.js"
     },
-    "author": "Me",
+    "author": "Stayby team",
     "license": "ISC",
     "dependencies": {
         "bcrypt": "^5.0.0",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "cryptr": "^6.0.3",
+        "dotenv": "^16.0.3",
         "express": "^4.17.1",
         "lodash": "^4.17.21",
         "mongodb": "^3.2.7",
