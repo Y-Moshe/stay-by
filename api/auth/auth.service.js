@@ -1,8 +1,13 @@
 const Cryptr = require('cryptr')
 const bcrypt = require('bcrypt')
+const {
+    CRYPTR_SECRET
+} = require('../../config')
+
+const cryptr = new Cryptr(CRYPTR_SECRET)
+
 const userService = require('../user/user.service')
 const logger = require('../../services/logger.service')
-const cryptr = new Cryptr(process.env.SECRET1 || 'Secret-Puk-1234')
 
 async function login(username, password) {
     logger.debug(`auth.service - login with username: ${username}`)
@@ -18,12 +23,6 @@ async function login(username, password) {
     return user
 }
 
-// (async ()=>{
-//     await signup('bubu', '123', 'Bubu Bi')
-//     await signup('mumu', '123', 'Mumu Maha')
-// })()
-
-
 async function signup({ username, password, fullname, imgUrl }) {
     const saltRounds = 10
 
@@ -36,7 +35,6 @@ async function signup({ username, password, fullname, imgUrl }) {
     const hash = await bcrypt.hash(password, saltRounds)
     return userService.add({ username, password: hash, fullname, imgUrl })
 }
-
 
 function getLoginToken(user) {
     delete user.password
