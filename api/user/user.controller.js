@@ -1,5 +1,4 @@
 const userService = require('./user.service')
-const socketService = require('../../services/socket.service')
 const logger = require('../../services/logger.service')
 
 async function getUser(req, res) {
@@ -12,29 +11,10 @@ async function getUser(req, res) {
     }
 }
 
-async function getUsers(req, res) {
-    try {
-        const users = await userService.query()
-        res.send(users)
-    } catch (err) {
-        logger.error('Failed to get users', err)
-        res.status(500).send({ err: 'Failed to get users' })
-    }
-}
-
-async function deleteUser(req, res) {
-    try {
-        await userService.remove(req.params.id)
-        res.send({ msg: 'Deleted successfully' })
-    } catch (err) {
-        logger.error('Failed to delete user', err)
-        res.status(500).send({ err: 'Failed to delete user' })
-    }
-}
-
 async function updateUser(req, res) {
     try {
         const user = req.body
+        user._id = req.params.id
         const savedUser = await userService.update(user)
         res.send(savedUser)
     } catch (err) {
@@ -45,7 +25,5 @@ async function updateUser(req, res) {
 
 module.exports = {
     getUser,
-    getUsers,
-    deleteUser,
     updateUser
 }
