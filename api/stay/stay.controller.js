@@ -79,10 +79,12 @@ async function addStay(req, res) {
   }
 }
 
-
 async function updateStay(req, res) {
   try {
     const { id: stayId } = req.params
+    const isOwner = await stayService.isStayOwner(stayId, req.loggedinUser._id)
+    if (!isOwner) return res.status(401).send({ err: 'Not Authorized!' })
+
     const stay = req.body
     const updatedStay = await stayService.update(stayId, stay)
     res.json(updatedStay)
@@ -95,44 +97,15 @@ async function updateStay(req, res) {
 
 async function removeStay(req, res) {
   try {
-    const stayId = req.params.id
+    const { id: stayId } = req.params
+    const isOwner = await stayService.isStayOwner(stayId, req.loggedinUser._id)
+    if (!isOwner) return res.status(401).send({ err: 'Not Authorized!' })
+
     const removedId = await stayService.remove(stayId)
-    res.send(removedId)
+    res.send(removedId + ' successfully removed!')
   } catch (err) {
     logger.error('Failed to remove stay', err)
     res.status(500).send({ err: 'Failed to remove stay' })
-  }
-}
-
-async function addStayMsg(req, res) {
-  const { loggedinUser } = req
-  try {
-    const stayId = req.params.id
-    const msg = {
-      txt: req.body.txt,
-      by: loggedinUser
-    }
-    const savedMsg = await stayService.addStayMsg(stayId, msg)
-    res.json(savedMsg)
-  } catch (err) {
-    logger.error('Failed to update stay', err)
-    res.status(500).send({ err: 'Failed to update stay' })
-
-  }
-}
-
-async function removeStayMsg(req, res) {
-  const { loggedinUser } = req
-  try {
-    const stayId = req.params.id
-    const { msgId } = req.params
-
-    const removedId = await stayService.removeStayMsg(stayId, msgId)
-    res.send(removedId)
-  } catch (err) {
-    logger.error('Failed to remove stay msg', err)
-    res.status(500).send({ err: 'Failed to remove stay msg' })
-
   }
 }
 
@@ -142,8 +115,6 @@ module.exports = {
   addStay,
   updateStay,
   removeStay,
-  addStayMsg,
-  removeStayMsg,
   getStayLocations,
   getLikedStays,
   getListings
