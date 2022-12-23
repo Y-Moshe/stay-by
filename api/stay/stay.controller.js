@@ -7,8 +7,8 @@ async function getStays(req, res) {
   try {
     logger.debug('Getting Stays')
     const filterBy = req.query
-    const stays = await stayService.query(filterBy)
-    res.json(stays)
+    const results = await stayService.query(filterBy)
+    res.json(results)
   } catch (err) {
     logger.error('Failed to get stays', err)
     res.status(500).send({ err: 'Failed to get stays' })

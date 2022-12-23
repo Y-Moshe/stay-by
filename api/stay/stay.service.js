@@ -13,7 +13,11 @@ async function query(filterBy = {}) {
             .limit(40)
             .toArray()
 
-        return stays.map(_mapStay)
+        const totalStays = await collection.countDocuments(criteria)
+        return {
+            stays: stays.map(_mapStay),
+            totalStays
+        }
     } catch (err) {
         logger.error('cannot find stays', err)
         throw err
