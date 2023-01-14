@@ -4,6 +4,7 @@ const logger = require('../../services/logger.service')
 const DEFAULT_EXP_TIME = 1000 * 60 * 60 * 3 // 3 hours
 // That way can be controlled with Environment Variables in render website!
 const LOGIN_EXPIRATION_TIME = +process.env?.LOGIN_EXPIRATION_TIME || DEFAULT_EXP_TIME
+const getExpiration = () => new Date(Date.now() + LOGIN_EXPIRATION_TIME)
 
 async function login(req, res) {
     const { username, password } = req.body
@@ -11,7 +12,10 @@ async function login(req, res) {
         const user = await authService.login(username, password)
         const loginToken = authService.getLoginToken(user)
         logger.info('User login: ', user)
-        res.cookie('loginToken', loginToken, { maxAge: LOGIN_EXPIRATION_TIME })
+
+        const expires = getExpiration()
+        user.tokenExp = expires.getTime()
+        res.cookie('loginToken', loginToken, { expires })
         res.json(user)
     } catch (err) {
         logger.error('Failed to Login ' + err)
@@ -29,7 +33,10 @@ async function signup(req, res) {
         const user = await authService.login(credentials.username, credentials.password)
         logger.info('User signup:', user)
         const loginToken = authService.getLoginToken(user)
-        res.cookie('loginToken', loginToken, { maxAge: LOGIN_EXPIRATION_TIME })
+
+        const expires = getExpiration()
+        user.tokenExp = expires.getTime()
+        res.cookie('loginToken', loginToken, { expires })
         res.json(user)
     } catch (err) {
         logger.error('Failed to signup ' + err)
